@@ -1,11 +1,23 @@
-import React from 'react';
-import { Car, ShieldCheck, Sparkles, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Car, ShieldCheck, AlertCircle, ExternalLink, CheckCircle2 } from 'lucide-react';
 
 interface HeaderProps {
   onOpenPenaltiesInfo: () => void;
+  plate?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenPenaltiesInfo }) => {
+export const Header: React.FC<HeaderProps> = ({ onOpenPenaltiesInfo, plate = '' }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleFinesCheck = () => {
+    if (plate) {
+      navigator.clipboard.writeText(plate);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    }
+    window.open('https://e-services.mvr.bg/gservices/check-obligations', '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <header className="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 transition-all no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
@@ -35,11 +47,15 @@ export const Header: React.FC<HeaderProps> = ({ onOpenPenaltiesInfo }) => {
         {/* Right side controls */}
         <div className="flex items-center gap-2 sm:gap-3">
           <button
-            onClick={onOpenPenaltiesInfo}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition-all"
-            title="Информация за глоби при изтекли документи"
+            onClick={handleFinesCheck}
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 text-white shadow-lg shadow-purple-900/30 active:scale-[0.98] transition-all border border-transparent"
+            title="Проверка на глоби в системата на МВР"
           >
-            <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+            {copied ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            ) : (
+              <ExternalLink className="w-4 h-4" />
+            )}
             <span className="hidden md:inline">Справка за Глоби</span>
           </button>
 

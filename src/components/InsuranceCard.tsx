@@ -1,14 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { InsuranceDetails } from '../types';
 import { StatusBadge } from './StatusBadge';
-import { ShieldCheck, Calendar, Building2, FileText, AlertCircle, Clock } from 'lucide-react';
+import { ShieldCheck, Calendar, Building2, FileText, ExternalLink, CheckCircle2, Clock } from 'lucide-react';
 
 interface InsuranceCardProps {
   insurance: InsuranceDetails;
+  plate?: string;
 }
 
-export const InsuranceCard: React.FC<InsuranceCardProps> = ({ insurance }) => {
+export const InsuranceCard: React.FC<InsuranceCardProps> = ({ insurance, plate = '' }) => {
   const { status, statusText, insurer, expiryDate, policyNumber, remainingDays, annualCostBgn } = insurance;
+  const [copied, setCopied] = useState(false);
+
+  const handleGuaranteeFundCheck = () => {
+    if (plate) {
+      navigator.clipboard.writeText(plate);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    }
+    window.open('https://www.guaranteefund.org/bg/%D0%B8%D0%BD%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%B5%D0%BD-%D1%86%D0%B5%D0%BD%D1%82%D1%8A%D1%80-%D0%B8-%D1%81%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8/%D1%83%D1%81%D0%BB%D1%83%D0%B3%D0%B8/%D0%BF%D1%80%D0%BE%D0%B2%D0%B5%D1%80%D0%BA%D0%B0-%D0%B7%D0%B0-%D0%B2%D0%B0%D0%BB%D0%B8%D0%B4%D0%BD%D0%B0-%D0%B7%D0%B0%D1%81%D1%82%D1%80%D0%B0%D1%85%D0%BE%D0%B2%D0%BA%D0%B0-%D0%B3%D1%80a%D0%B6%D0%B4%D0%B0%D0%BD%D1%81%D0%BA%D0%B0-%D0%BE%D1%82%D0%B3%D0%BE%D0%B2%D0%BE%D1%80%D0%BD%D0%BE%D1%81%D1%82-%D0%BD%D0%B0-%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%BE%D0%B1%D0%B8%D0%BB%D0%B8%D1%81%D1%82%D0%B8%D1%82%D0%B5', '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div className="glass-card rounded-2xl p-6 relative overflow-hidden transition-all h-full flex flex-col justify-between border border-slate-800/90">
@@ -90,11 +101,28 @@ export const InsuranceCard: React.FC<InsuranceCardProps> = ({ insurance }) => {
       </div>
 
       {/* Footer advice */}
-      <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
-        <span className="text-slate-400">Приблизителна цена:</span>
-        <span className="font-extrabold text-white font-mono">
-          {status === 'no_data' ? 'Няма данни' : `~${annualCostBgn} лв. / год.`}
-        </span>
+      <div className="mt-4 pt-3 border-t border-slate-800/80 space-y-3">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-slate-400">Приблизителна цена:</span>
+          <span className="font-extrabold text-white font-mono">
+            {status === 'no_data' ? 'Няма данни' : `~${annualCostBgn} лв. / год.`}
+          </span>
+        </div>
+        
+        <button
+          type="button"
+          onClick={handleGuaranteeFundCheck}
+          className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 text-white text-xs sm:text-sm font-extrabold rounded-xl shadow-lg shadow-purple-900/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <ExternalLink className="w-4 h-4" />
+          <span>Бърза проверка в Гаранционен фонд</span>
+        </button>
+        {copied && (
+          <div className="p-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center justify-center gap-1.5 animate-in fade-in zoom-in-95 duration-200">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Номерът е копиран!</span>
+          </div>
+        )}
       </div>
     </div>
   );

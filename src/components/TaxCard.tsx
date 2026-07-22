@@ -1,15 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TaxDetails } from '../types';
 import { StatusBadge } from './StatusBadge';
-import { Landmark, Calendar, Coins, CheckCircle2, AlertOctagon } from 'lucide-react';
+import { Landmark, Calendar, Coins, CheckCircle2, AlertOctagon, ExternalLink } from 'lucide-react';
 
 interface TaxCardProps {
   tax: TaxDetails;
+  plate?: string;
 }
 
-export const TaxCard: React.FC<TaxCardProps> = ({ tax }) => {
+export const TaxCard: React.FC<TaxCardProps> = ({ tax, plate = '' }) => {
   const { status, statusText, municipality, taxYear, amountBgn, dueDate } = tax;
   const isPaid = status === 'paid';
+  const [copied, setCopied] = useState(false);
+
+  const handleEgovCheck = () => {
+    if (plate) {
+      navigator.clipboard.writeText(plate);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    }
+    window.open('https://egov.bg/', '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div className="glass-card rounded-2xl p-6 relative overflow-hidden transition-all h-full flex flex-col justify-between border border-slate-800/90">
@@ -87,9 +98,26 @@ export const TaxCard: React.FC<TaxCardProps> = ({ tax }) => {
       </div>
 
       {/* Footer deadline */}
-      <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-        <span>Срок за плащане:</span>
-        <span className="font-semibold text-slate-200">{dueDate}</span>
+      <div className="mt-4 pt-3 border-t border-slate-800/80 space-y-3">
+        <div className="flex items-center justify-between text-xs text-slate-400">
+          <span>Срок за плащане:</span>
+          <span className="font-semibold text-slate-200">{dueDate}</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleEgovCheck}
+          className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 text-white text-xs sm:text-sm font-extrabold rounded-xl shadow-lg shadow-purple-900/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <ExternalLink className="w-4 h-4" />
+          <span>Проверка на Местни Данъци & Такси</span>
+        </button>
+        {copied && (
+          <div className="p-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center justify-center gap-1.5 animate-in fade-in zoom-in-95 duration-200">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Номерът е копиран!</span>
+          </div>
+        )}
       </div>
     </div>
   );

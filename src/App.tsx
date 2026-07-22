@@ -113,7 +113,10 @@ export default function App() {
 
       <div className="relative z-10 flex-1 flex flex-col">
         {/* Header Navigation */}
-        <Header onOpenPenaltiesInfo={() => setIsPenaltiesOpen(true)} />
+        <Header 
+          onOpenPenaltiesInfo={() => setIsPenaltiesOpen(true)} 
+          plate={activePlate}
+        />
 
         {/* Main Content Area */}
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -170,7 +173,7 @@ export default function App() {
 
                   {/* Card 2: Insurance */}
                   <div className="lg:col-span-1">
-                    <InsuranceCard insurance={result.insurance} />
+                    <InsuranceCard insurance={result.insurance} plate={activePlate} />
                   </div>
 
                   {/* Card 3: Technical Inspection */}
@@ -185,7 +188,7 @@ export default function App() {
 
                   {/* Card 5: Vehicle Tax */}
                   <div className="md:col-span-1 lg:col-span-2">
-                    <TaxCard tax={result.tax} />
+                    <TaxCard tax={result.tax} plate={activePlate} />
                   </div>
                 </div>
               </div>
