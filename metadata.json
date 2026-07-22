@@ -1,0 +1,6 @@
+{
+  "name": "Проверка на МПС",
+  "description": "Инструмент за бърза проверка на регистрационен номер, гражданска отговорност, ГТП, винетка и данък МПС.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
