@@ -7,6 +7,7 @@ import { InsuranceCard } from './components/InsuranceCard';
 import { InspectionCard } from './components/InspectionCard';
 import { VignetteCard } from './components/VignetteCard';
 import { TaxCard } from './components/TaxCard';
+import { ParkingCard } from './components/ParkingCard';
 import { TimelineView } from './components/TimelineView';
 import { PenaltyEstimatorModal } from './components/PenaltyEstimatorModal';
 import { ReminderModal } from './components/ReminderModal';
@@ -187,8 +188,13 @@ export default function App() {
                   </div>
 
                   {/* Card 5: Vehicle Tax */}
-                  <div className="md:col-span-1 lg:col-span-2">
+                  <div className="md:col-span-1 lg:col-span-1">
                     <TaxCard tax={result.tax} plate={activePlate} />
+                  </div>
+
+                  {/* Card 6: Parking Permit */}
+                  <div className="md:col-span-1 lg:col-span-1">
+                    <ParkingCard plate={activePlate} />
                   </div>
                 </div>
               </div>
@@ -238,6 +244,7 @@ export default function App() {
             isOpen={isReminderOpen}
             onClose={() => setIsReminderOpen(false)}
             result={result}
+            plate={activePlate}
           />
 
           <PrintReportModal

@@ -6,12 +6,28 @@ interface ReminderModalProps {
   isOpen: boolean;
   onClose: () => void;
   result: CheckResult;
+  plate?: string;
 }
 
-export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, result }) => {
+export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, result, plate = '' }) => {
   const [email, setEmail] = useState('');
   const [selectedDocs, setSelectedDocs] = useState<string[]>(['insurance', 'inspection', 'vignette']);
   const [isSaved, setIsSaved] = useState(false);
+  const [parkingPermitDate, setParkingPermitDate] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (isOpen && plate) {
+      const saved = localStorage.getItem(`parking_permit_${plate}`);
+      if (saved) {
+        setParkingPermitDate(saved);
+        if (!selectedDocs.includes('parking')) {
+          setSelectedDocs(prev => [...prev, 'parking']);
+        }
+      } else {
+        setParkingPermitDate(null);
+      }
+    }
+  }, [isOpen, plate]);
 
   if (!isOpen) return null;
 
@@ -39,7 +55,7 @@ VERSION:2.0
 PRODID:-//Проверка на МПС//BG
 BEGIN:VEVENT
 SUMMARY:Напомняне: Изтичащи документи МПС ${result.formattedPlate}
-DESCRIPTION:Гражданска отговорност: ${result.insurance.expiryDate}\\nГТП: ${result.inspection.expiryDate}\\nВинетка: ${result.vignette.expiryDate}
+DESCRIPTION:Гражданска отговорност: ${result.insurance.expiryDate}\\nГТП: ${result.inspection.expiryDate}\\nВинетка: ${result.vignette.expiryDate}${parkingPermitDate ? `\\nПаркиране и Зони: ${new Date(parkingPermitDate).toLocaleDateString('bg-BG')}` : ''}
 DTSTART:20260801T090000Z
 DTEND:20260801T100000Z
 END:VEVENT
@@ -146,6 +162,20 @@ END:VCALENDAR`;
                       className="w-4 h-4 rounded text-cyan-500 focus:ring-cyan-500 bg-slate-950 border-slate-700"
                     />
                   </label>
+                  
+                  {parkingPermitDate && (
+                    <label className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer hover:bg-slate-800/80 transition-colors">
+                      <span className="text-xs font-semibold text-slate-200">
+                        Абонамент за паркиране ({new Date(parkingPermitDate).toLocaleDateString('bg-BG')})
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={selectedDocs.includes('parking')}
+                        onChange={() => toggleDoc('parking')}
+                        className="w-4 h-4 rounded text-cyan-500 focus:ring-cyan-500 bg-slate-950 border-slate-700"
+                      />
+                    </label>
+                  )}
                 </div>
               </div>
 
