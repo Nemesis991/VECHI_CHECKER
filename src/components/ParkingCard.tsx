@@ -1,45 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Calendar, Clock, Edit2, CheckCircle2, AlertOctagon, Info } from 'lucide-react';
+import { MapPin, Calendar, Clock, Edit2, CheckCircle2, AlertOctagon, Info, Cloud } from 'lucide-react';
+import { saveVehicleDate } from '../utils/apiCustomDates';
 
 interface ParkingCardProps {
   plate: string;
+  customDate?: string;
 }
 
-export const ParkingCard: React.FC<ParkingCardProps> = ({ plate }) => {
+export const ParkingCard: React.FC<ParkingCardProps> = ({ plate, customDate }) => {
   const [expiryDate, setExpiryDate] = useState<string>('');
   const [isEditing, setIsEditing] = useState(false);
   const [tempDate, setTempDate] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Load from localStorage on mount or plate change
   useEffect(() => {
-    if (!plate) return;
-    try {
-      const saved = localStorage.getItem(`parking_permit_${plate}`);
-      if (saved) {
-        setExpiryDate(saved);
-        setTempDate(saved);
-      } else {
-        setExpiryDate('');
-        setTempDate('');
-      }
-    } catch (e) {
-      console.error(e);
+    if (customDate) {
+      setExpiryDate(customDate);
+      setTempDate(customDate);
+    } else {
+      setExpiryDate('');
+      setTempDate('');
     }
-  }, [plate]);
+  }, [customDate, plate]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!plate) return;
+    setIsSaving(true);
     try {
-      if (tempDate) {
-        localStorage.setItem(`parking_permit_${plate}`, tempDate);
+      const success = await saveVehicleDate(plate, 'parking_permit_expiration', tempDate);
+      if (success) {
         setExpiryDate(tempDate);
-      } else {
-        localStorage.removeItem(`parking_permit_${plate}`);
-        setExpiryDate('');
+        setIsEditing(false);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
       }
-      setIsEditing(false);
     } catch (e) {
       console.error(e);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -106,7 +105,17 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({ plate }) => {
         </div>
 
         {/* Content details */}
-        <div className="space-y-3.5">
+        <div className="space-y-3.5 relative">
+          {/* Toast Notification */}
+          {showToast && (
+            <div className="absolute -top-12 left-0 right-0 flex justify-center z-10 animate-in slide-in-from-top-4 fade-in duration-300">
+              <div className="bg-emerald-500/90 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg border border-emerald-400/30 flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Датите за {plate} са запазени!
+              </div>
+            </div>
+          )}
+
           {/* Validity tracker section */}
           <div className="py-2 space-y-3">
             <div className="flex items-center justify-between">
@@ -130,7 +139,7 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({ plate }) => {
             </div>
 
             {isEditing ? (
-              <div className="flex flex-col gap-2 p-3 bg-slate-900 rounded-xl border border-slate-700 animate-in fade-in duration-200">
+              <div className="flex flex-col gap-2 p-3 bg-slate-900/80 backdrop-blur-sm rounded-xl border border-slate-700 animate-in fade-in zoom-in-95 duration-200 shadow-xl">
                 <label className="text-xs text-slate-400">Въведете дата на изтичане:</label>
                 <div className="flex items-center gap-2">
                   <input
@@ -141,7 +150,8 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({ plate }) => {
                   />
                   <button
                     onClick={handleSave}
-                    className="px-3 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold rounded-lg transition-colors"
+                    disabled={isSaving}
+                    className="px-3 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold rounded-lg transition-colors disabled:opacity-50"
                   >
                     Запази
                   </button>
@@ -150,15 +160,19 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({ plate }) => {
                       setIsEditing(false);
                       setTempDate(expiryDate);
                     }}
-                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-lg transition-colors"
+                    disabled={isSaving}
+                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
                   >
                     Отказ
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="text-sm font-bold text-slate-100 font-mono">
-                {expiryDate ? new Date(expiryDate).toLocaleDateString('bg-BG') : 'Няма въведена дата'}
+              <div className="flex items-center gap-2">
+                <div className="text-sm font-bold text-slate-100 font-mono">
+                  {expiryDate ? new Date(expiryDate).toLocaleDateString('bg-BG') : 'Няма въведена дата'}
+                </div>
+                {expiryDate && <span className="text-[10px] text-cyan-400/80 bg-cyan-400/10 px-1.5 py-0.5 rounded ml-1 border border-cyan-400/20">Ръчно</span>}
               </div>
             )}
           </div>
@@ -176,8 +190,8 @@ export const ParkingCard: React.FC<ParkingCardProps> = ({ plate }) => {
       {/* Footer advice */}
       <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
         <span className="flex items-center gap-1">
-          <Clock className="w-3 h-3" />
-          Запазва се само във вашия браузър
+          <Cloud className="w-3 h-3 text-cyan-500" />
+          Синхронизирано в облака
         </span>
       </div>
     </div>

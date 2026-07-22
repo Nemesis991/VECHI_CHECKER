@@ -1,8 +1,15 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DB_PATH = path.join(__dirname, 'data', 'vehicle_custom_dates.json');
 
 const app = express();
 const PORT = 3005;
@@ -27,6 +34,17 @@ app.get('/api/check-plate/:plate', async (req, res) => {
   // Strip spaces and hyphens, convert to uppercase
   const rawPlate = req.params.plate || '';
   const plate = rawPlate.replace(/[\s-]/g, '').toUpperCase();
+  const latinPlate = plate.split('').map(c => cyrillicToLatinMap[c] || c).join('');
+
+  // Load custom dates if they exist
+  let customDatesData = {};
+  try {
+    const fileContent = await fs.readFile(DB_PATH, 'utf-8');
+    customDatesData = JSON.parse(fileContent);
+  } catch (e) {
+    // If file doesn't exist or is invalid, just proceed
+  }
+  const customDates = customDatesData[latinPlate] || {};
 
   // Create base response with "no_data" for protected fields
   const baseResponse = {
@@ -34,6 +52,7 @@ app.get('/api/check-plate/:plate', async (req, res) => {
     formattedPlate: plate,
     checkTimestamp: new Date().toISOString(),
     overallStatus: 'warning',
+    customDates,
     vehicle: {
       make: 'Няма данни',
       model: 'Няма данни',
@@ -82,8 +101,6 @@ app.get('/api/check-plate/:plate', async (req, res) => {
       priceBgn: 0
     }
   };
-
-  const latinPlate = plate.split('').map(c => cyrillicToLatinMap[c] || c).join('');
 
   if (isVIN(plate)) {
     try {
@@ -220,6 +237,49 @@ app.get('/api/check-plate/:plate', async (req, res) => {
   }
 
   return res.json(baseResponse);
+});
+
+// Endpoint to update custom dates
+app.post('/api/custom-dates/:plate', async (req, res) => {
+  const rawPlate = req.params.plate || '';
+  const plate = rawPlate.replace(/[\s-]/g, '').toUpperCase();
+  const latinPlate = plate.split('').map(c => cyrillicToLatinMap[c] || c).join('');
+  const { field, value } = req.body;
+
+  if (!field) {
+    return res.status(400).json({ error: 'Field is required' });
+  }
+
+  try {
+    let customDatesData = {};
+    try {
+      const fileContent = await fs.readFile(DB_PATH, 'utf-8');
+      customDatesData = JSON.parse(fileContent);
+    } catch (e) {
+      // File doesn't exist, we will create it
+    }
+
+    if (!customDatesData[latinPlate]) {
+      customDatesData[latinPlate] = {};
+    }
+
+    if (value) {
+      customDatesData[latinPlate][field] = value;
+    } else {
+      delete customDatesData[latinPlate][field];
+    }
+    
+    customDatesData[latinPlate].updated_at = new Date().toISOString();
+
+    // Ensure directory exists
+    await fs.mkdir(path.dirname(DB_PATH), { recursive: true });
+    await fs.writeFile(DB_PATH, JSON.stringify(customDatesData, null, 2), 'utf-8');
+
+    res.json({ success: true, plate: latinPlate, data: customDatesData[latinPlate] });
+  } catch (error) {
+    console.error(`[Custom Dates Error] ${error.message}`);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {

@@ -13,21 +13,29 @@ export const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose, r
   const [email, setEmail] = useState('');
   const [selectedDocs, setSelectedDocs] = useState<string[]>(['insurance', 'inspection', 'vignette']);
   const [isSaved, setIsSaved] = useState(false);
-  const [parkingPermitDate, setParkingPermitDate] = useState<string | null>(null);
+
+  const customDates = result.customDates || {};
+
+  const getDisplayDate = (customDate?: string, defaultDate?: string) => {
+    if (customDate) {
+      const d = new Date(customDate);
+      if (!isNaN(d.getTime())) return d.toLocaleDateString('bg-BG');
+    }
+    return defaultDate || 'Няма данни';
+  };
+
+  const insuranceDate = getDisplayDate(customDates.go_expiration, result.insurance.expiryDate);
+  const inspectionDate = getDisplayDate(customDates.gtp_expiration, result.inspection.expiryDate);
+  const vignetteDate = getDisplayDate(customDates.vignette_expiration, result.vignette.expiryDate);
+  
+  const parkingPermitRaw = customDates.parking_permit_expiration;
+  const parkingPermitDate = parkingPermitRaw ? new Date(parkingPermitRaw).toLocaleDateString('bg-BG') : null;
 
   React.useEffect(() => {
-    if (isOpen && plate) {
-      const saved = localStorage.getItem(`parking_permit_${plate}`);
-      if (saved) {
-        setParkingPermitDate(saved);
-        if (!selectedDocs.includes('parking')) {
-          setSelectedDocs(prev => [...prev, 'parking']);
-        }
-      } else {
-        setParkingPermitDate(null);
-      }
+    if (isOpen && parkingPermitDate && !selectedDocs.includes('parking')) {
+      setSelectedDocs(prev => [...prev, 'parking']);
     }
-  }, [isOpen, plate]);
+  }, [isOpen, parkingPermitDate]);
 
   if (!isOpen) return null;
 
@@ -55,7 +63,7 @@ VERSION:2.0
 PRODID:-//Проверка на МПС//BG
 BEGIN:VEVENT
 SUMMARY:Напомняне: Изтичащи документи МПС ${result.formattedPlate}
-DESCRIPTION:Гражданска отговорност: ${result.insurance.expiryDate}\\nГТП: ${result.inspection.expiryDate}\\nВинетка: ${result.vignette.expiryDate}${parkingPermitDate ? `\\nПаркиране и Зони: ${new Date(parkingPermitDate).toLocaleDateString('bg-BG')}` : ''}
+DESCRIPTION:Гражданска отговорност: ${insuranceDate}\\nГТП: ${inspectionDate}\\nВинетка: ${vignetteDate}${parkingPermitDate ? `\\nПаркиране и Зони: ${parkingPermitDate}` : ''}
 DTSTART:20260801T090000Z
 DTEND:20260801T100000Z
 END:VEVENT
@@ -64,7 +72,7 @@ END:VCALENDAR`;
     const blob = new Blob([eventText], { type: 'text/calendar;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `Напомняне_${result.formattedPlate.replace(/\s+/g, '')}.ics`;
+    link.download = `Напомняне_${result.formattedPlate.replace(/\\s+/g, '')}.ics`;
     link.click();
   };
 
@@ -129,7 +137,7 @@ END:VCALENDAR`;
                 <div className="space-y-2">
                   <label className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer hover:bg-slate-800/80 transition-colors">
                     <span className="text-xs font-semibold text-slate-200">
-                      Гражданска отговорност ({result.insurance.expiryDate})
+                      Гражданска отговорност ({insuranceDate})
                     </span>
                     <input
                       type="checkbox"
@@ -141,7 +149,7 @@ END:VCALENDAR`;
 
                   <label className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer hover:bg-slate-800/80 transition-colors">
                     <span className="text-xs font-semibold text-slate-200">
-                      Технически преглед ГТП ({result.inspection.expiryDate})
+                      Технически преглед ГТП ({inspectionDate})
                     </span>
                     <input
                       type="checkbox"
@@ -153,7 +161,7 @@ END:VCALENDAR`;
 
                   <label className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer hover:bg-slate-800/80 transition-colors">
                     <span className="text-xs font-semibold text-slate-200">
-                      Винетка ({result.vignette.expiryDate})
+                      Винетка ({vignetteDate})
                     </span>
                     <input
                       type="checkbox"
@@ -166,7 +174,7 @@ END:VCALENDAR`;
                   {parkingPermitDate && (
                     <label className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer hover:bg-slate-800/80 transition-colors">
                       <span className="text-xs font-semibold text-slate-200">
-                        Абонамент за паркиране ({new Date(parkingPermitDate).toLocaleDateString('bg-BG')})
+                        Абонамент за паркиране ({parkingPermitDate})
                       </span>
                       <input
                         type="checkbox"

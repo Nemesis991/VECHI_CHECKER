@@ -54,6 +54,15 @@ export interface TaxDetails {
   dueDate: string;
 }
 
+export interface CustomDates {
+  go_expiration?: string;
+  tax_expiration?: string;
+  gtp_expiration?: string;
+  vignette_expiration?: string;
+  parking_permit_expiration?: string;
+  updated_at?: string;
+}
+
 export interface CheckResult {
   plate: string;
   formattedPlate: string;
@@ -64,6 +73,7 @@ export interface CheckResult {
   vignette: VignetteDetails;
   tax: TaxDetails;
   overallStatus: 'valid' | 'warning' | 'danger';
+  customDates?: CustomDates;
 }
 
 export interface SamplePreset {

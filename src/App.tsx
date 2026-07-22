@@ -172,29 +172,29 @@ export default function App() {
                     <VehicleDetailsCard vehicle={result.vehicle} />
                   </div>
 
-                  {/* Card 2: Insurance */}
-                  <div className="lg:col-span-1">
-                    <InsuranceCard insurance={result.insurance} plate={activePlate} />
+                  {/* Card 2: Civil Liability (GO) */}
+                  <div className="md:col-span-1 lg:col-span-1">
+                    <InsuranceCard insurance={result.insurance} plate={result.plate} customDate={result.customDates?.go_expiration} />
                   </div>
 
                   {/* Card 3: Technical Inspection */}
                   <div className="lg:col-span-1">
-                    <InspectionCard inspection={result.inspection} plate={result.plate} />
+                    <InspectionCard inspection={result.inspection} plate={result.plate} customDate={result.customDates?.gtp_expiration} />
                   </div>
 
                   {/* Card 4: Vignette */}
                   <div className="md:col-span-1 lg:col-span-1">
-                    <VignetteCard vignette={result.vignette} />
+                    <VignetteCard vignette={result.vignette} plate={result.plate} customDate={result.customDates?.vignette_expiration} />
                   </div>
 
                   {/* Card 5: Vehicle Tax */}
                   <div className="md:col-span-1 lg:col-span-1">
-                    <TaxCard tax={result.tax} plate={activePlate} />
+                    <TaxCard tax={result.tax} plate={activePlate} customDate={result.customDates?.tax_expiration} />
                   </div>
 
                   {/* Card 6: Parking Permit */}
                   <div className="md:col-span-1 lg:col-span-1">
-                    <ParkingCard plate={activePlate} />
+                    <ParkingCard plate={activePlate} customDate={result.customDates?.parking_permit_expiration} />
                   </div>
                 </div>
               </div>
